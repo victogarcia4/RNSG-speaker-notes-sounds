@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 export interface UseSlideSpeechOptions {
   onSlideComplete?: () => void;
   autoAdvance?: boolean;
+  preferredLanguage?: 'en' | 'es';
 }
 
 export function useSlideSpeech(options: UseSlideSpeechOptions = {}) {
@@ -19,29 +20,48 @@ export function useSlideSpeech(options: UseSlideSpeechOptions = {}) {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const onSlideCompleteRef = useRef(options.onSlideComplete);
   onSlideCompleteRef.current = options.onSlideComplete;
+  const lang = options.preferredLanguage || 'en';
 
-  // Load available speech synthesis voices
+  const findBestVoiceForLang = useCallback((availableVoices: SpeechSynthesisVoice[], targetLang: 'en' | 'es') => {
+    if (!availableVoices.length) return null;
+    const prefix = targetLang === 'es' ? 'es' : 'en';
+    const matches = availableVoices.filter(v => v.lang.toLowerCase().startsWith(prefix));
+    if (matches.length === 0) return availableVoices[0] || null;
+
+    if (targetLang === 'es') {
+      return (
+        matches.find(v => v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Monica') || v.name.includes('Paulina') || v.name.includes('Jorge') || v.name.includes('Helena')) ||
+        matches[0]
+      );
+    } else {
+      return (
+        matches.find(v => v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('David') || v.name.includes('Jenny') || v.name.includes('Guy')) ||
+        matches[0]
+      );
+    }
+  }, []);
+
+  // Load available speech synthesis voices & sync with preferred language
   useEffect(() => {
     const updateVoices = () => {
       if (typeof window === 'undefined' || !window.speechSynthesis) return;
       const available = window.speechSynthesis.getVoices();
       setVoices(available);
       
-      // Auto-select a high-quality natural English voice if none selected
-      if (!selectedVoice && available.length > 0) {
-        const preferred = available.find(
-          v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('David'))
-        ) || available.find(v => v.lang.startsWith('en')) || available[0];
-        
-        setSelectedVoice(preferred || null);
-      }
+      // If voice doesn't match preferred language or no voice selected, pick best
+      setSelectedVoice((prev) => {
+        if (!prev || !prev.lang.toLowerCase().startsWith(lang === 'es' ? 'es' : 'en')) {
+          return findBestVoiceForLang(available, lang);
+        }
+        return prev;
+      });
     };
 
     updateVoices();
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = updateVoices;
     }
-  }, [selectedVoice]);
+  }, [lang, findBestVoiceForLang]);
 
   const stop = useCallback(() => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;

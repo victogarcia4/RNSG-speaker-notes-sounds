@@ -12,7 +12,7 @@ import {
   Check,
   BookOpen,
   Layers,
-  Sparkles
+  Globe
 } from 'lucide-react';
 import { LectureData } from '../types';
 import { LECTURE_DECKS_METADATA } from '../data/lectures';
@@ -22,6 +22,8 @@ interface NavbarProps {
   activeDeckId: string;
   onSelectDeck: (deckId: string) => void;
   activeSlideNumber: number;
+  currentLanguage: 'en' | 'es';
+  onToggleLanguage: (lang: 'en' | 'es') => void;
   onOpenAppsScript: () => void;
   onOpenPythonScript: () => void;
   onOpenUploadModal: () => void;
@@ -36,6 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeDeckId,
   onSelectDeck,
   activeSlideNumber,
+  currentLanguage,
+  onToggleLanguage,
   onOpenAppsScript,
   onOpenPythonScript,
   onOpenUploadModal,
@@ -45,7 +49,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSidebarOpen,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [filterLanguage, setFilterLanguage] = useState<'en' | 'es'>(currentLanguage);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync internal dropdown filter when currentLanguage changes
+  useEffect(() => {
+    setFilterLanguage(currentLanguage);
+  }, [currentLanguage]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,8 +68,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const n1Decks = LECTURE_DECKS_METADATA.filter(d => d.course === 'Nursing 1');
-  const n3Decks = LECTURE_DECKS_METADATA.filter(d => d.course === 'Nursing 3');
+  const visibleDecks = LECTURE_DECKS_METADATA.filter(d => d.language === filterLanguage);
+  const n1Decks = visibleDecks.filter(d => d.course === 'Nursing 1');
+  const n3Decks = visibleDecks.filter(d => d.course === 'Nursing 3');
 
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-slate-100 px-4 py-2.5 sticky top-0 z-30 shadow-md">
@@ -90,10 +101,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white shrink-0 shadow-xs">
                 <Presentation className="w-4 h-4" />
               </div>
-              <div className="max-w-[210px] sm:max-w-xs md:max-w-sm">
+              <div className="max-w-[190px] sm:max-w-xs md:max-w-sm">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/30">
                     {lecture.course}
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded border border-amber-500/30">
+                    {currentLanguage === 'es' ? 'ES' : 'EN'}
                   </span>
                   <span className="text-xs font-semibold text-white truncate group-hover:text-indigo-200">
                     {lecture.title}
@@ -110,22 +124,54 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/90 p-2.5 z-50 text-xs animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="px-2 py-1.5 mb-1.5 flex items-center justify-between border-b border-slate-800">
-                  <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <div className="absolute left-0 mt-2 w-84 sm:w-96 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/90 p-3 z-50 text-xs animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-1 py-1 mb-2 flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="font-semibold text-slate-200 flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5 text-indigo-400" />
                     Select Presentation Deck
                   </span>
                   <span className="text-[10px] text-indigo-400 font-medium bg-indigo-950/80 px-2 py-0.5 rounded-full border border-indigo-800/60">
-                    8 Decks • 432 Slides
+                    16 Decks • 8 EN / 8 ES
                   </span>
                 </div>
 
+                {/* Language Switcher Tabs inside Dropdown */}
+                <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 rounded-xl mb-3 border border-slate-800">
+                  <button
+                    id="deck-dropdown-lang-en-btn"
+                    onClick={() => {
+                      setFilterLanguage('en');
+                      if (currentLanguage !== 'en') onToggleLanguage('en');
+                    }}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      filterLanguage === 'en'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span>English (EN)</span>
+                  </button>
+                  <button
+                    id="deck-dropdown-lang-es-btn"
+                    onClick={() => {
+                      setFilterLanguage('es');
+                      if (currentLanguage !== 'es') onToggleLanguage('es');
+                    }}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      filterLanguage === 'es'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span>Español (ES)</span>
+                  </button>
+                </div>
+
                 {/* Nursing 1 Section */}
-                <div className="mb-2">
-                  <div className="px-2 py-1 text-[11px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1">
+                <div className="mb-2.5 max-h-48 overflow-y-auto pr-1">
+                  <div className="px-2 py-1 text-[11px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1 sticky top-0 bg-slate-900 z-10">
                     <BookOpen className="w-3 h-3" />
-                    Nursing 1 (N1) — Foundations &amp; Care
+                    {filterLanguage === 'es' ? 'Enfermería 1 (N1) — Fundamentos' : 'Nursing 1 (N1) — Foundations & Care'}
                   </div>
                   <div className="space-y-1">
                     {n1Decks.map((deck) => {
@@ -139,7 +185,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           }}
                           className={`w-full text-left px-2.5 py-2 rounded-xl transition-all flex items-start justify-between gap-2 cursor-pointer ${
                             isActive
-                              ? 'bg-indigo-600/20 text-white border border-indigo-500/40'
+                              ? 'bg-indigo-600/25 text-white border border-indigo-500/50 shadow-xs'
                               : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                           }`}
                         >
@@ -162,10 +208,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 {/* Nursing 3 Section */}
-                <div>
-                  <div className="px-2 py-1 text-[11px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1">
+                <div className="max-h-48 overflow-y-auto pr-1">
+                  <div className="px-2 py-1 text-[11px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1 sticky top-0 bg-slate-900 z-10">
                     <BookOpen className="w-3 h-3" />
-                    Nursing 3 (N3) — Complex &amp; Emergencies
+                    {filterLanguage === 'es' ? 'Enfermería 3 (N3) — Complejo y Emergencias' : 'Nursing 3 (N3) — Complex & Emergencies'}
                   </div>
                   <div className="space-y-1">
                     {n3Decks.map((deck) => {
@@ -179,7 +225,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           }}
                           className={`w-full text-left px-2.5 py-2 rounded-xl transition-all flex items-start justify-between gap-2 cursor-pointer ${
                             isActive
-                              ? 'bg-indigo-600/20 text-white border border-indigo-500/40'
+                              ? 'bg-indigo-600/25 text-white border border-indigo-500/50 shadow-xs'
                               : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                           }`}
                         >
@@ -203,24 +249,54 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
           </div>
+
+          {/* Quick Language Toggle Pill */}
+          <div className="flex items-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/80 text-xs">
+            <button
+              id="lang-btn-en"
+              onClick={() => onToggleLanguage('en')}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                currentLanguage === 'en'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="English Narration"
+            >
+              EN
+            </button>
+            <button
+              id="lang-btn-es"
+              onClick={() => onToggleLanguage('es')}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                currentLanguage === 'es'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Narración en Español"
+            >
+              ES
+            </button>
+          </div>
         </div>
 
         {/* Center: Live Stats */}
         <div className="hidden xl:flex items-center gap-4 bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700/60 text-xs">
           <div className="flex items-center gap-1.5 text-slate-300">
-            <span className="text-indigo-400 font-semibold">Slide {activeSlideNumber}</span>
-            <span className="text-slate-500">of</span>
+            <span className="text-indigo-400 font-semibold">
+              {currentLanguage === 'es' ? 'Diapositiva' : 'Slide'} {activeSlideNumber}
+            </span>
+            <span className="text-slate-500">{currentLanguage === 'es' ? 'de' : 'of'}</span>
             <span className="font-semibold text-white">{lecture.totalSlides}</span>
           </div>
           <div className="h-3.5 w-px bg-slate-700"></div>
           <div className="flex items-center gap-1 text-slate-400">
             <FileText className="w-3.5 h-3.5 text-slate-400" />
-            <span>{lecture.totalWords.toLocaleString()} words</span>
+            <span>{lecture.totalWords.toLocaleString()} {currentLanguage === 'es' ? 'palabras' : 'words'}</span>
           </div>
           <div className="h-3.5 w-px bg-slate-700"></div>
           <div className="flex items-center gap-1 text-slate-400">
             <Clock className="w-3.5 h-3.5 text-slate-400" />
-            <span>~{lecture.estimatedMinutes} min delivery</span>
+            <span>~{lecture.estimatedMinutes} min {currentLanguage === 'es' ? 'de voz' : 'delivery'}</span>
           </div>
         </div>
 
@@ -254,27 +330,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Export Current Deck as JSON"
           >
             <Download className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden lg:inline">Export Deck</span>
+            <span className="hidden lg:inline">{currentLanguage === 'es' ? 'Exportar Deck' : 'Export Deck'}</span>
           </button>
 
           <button
             id="export-all-decks-btn"
             onClick={onExportAllJson}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
-            title="Export All 8 Presentations as Combined JSON"
+            title="Export All Presentations as Combined JSON"
           >
             <Download className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden xl:inline">Export All (432)</span>
+            <span className="hidden xl:inline">{currentLanguage === 'es' ? 'Exportar Todo (JSON)' : 'Export All (JSON)'}</span>
           </button>
 
           <button
             id="custom-upload-btn"
             onClick={onOpenUploadModal}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
-            title="Test Custom File"
+            title="Test Custom File or Choose Deck"
           >
             <UploadCloud className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden md:inline">Upload Script</span>
+            <span className="hidden md:inline">{currentLanguage === 'es' ? 'Cargar Notas' : 'Upload Script'}</span>
           </button>
         </div>
       </div>

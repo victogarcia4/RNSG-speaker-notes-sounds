@@ -30,8 +30,13 @@ export const CustomFileModal: React.FC<CustomFileModalProps> = ({
   const [scriptText, setScriptText] = useState('');
   const [deckTitle, setDeckTitle] = useState('');
   const [parseError, setParseError] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<'all' | 'en' | 'es'>('all');
 
   if (!isOpen) return null;
+
+  const filteredDecks = LECTURE_DECKS_METADATA.filter(d => 
+    selectedLanguage === 'all' ? true : d.language === selectedLanguage
+  );
 
   const handleParseAndLoad = () => {
     if (!scriptText.trim()) {
@@ -98,11 +103,48 @@ export const CustomFileModal: React.FC<CustomFileModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300">
           {/* Quick select curriculum decks */}
           <div>
-            <label className="block font-semibold mb-2 text-slate-800 dark:text-slate-200">
-              Pre-Loaded Curriculum Decks (Click to load):
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {LECTURE_DECKS_METADATA.map((deck) => (
+            <div className="flex items-center justify-between mb-2">
+              <label className="font-semibold text-slate-800 dark:text-slate-200">
+                Pre-Loaded Curriculum Decks (Click to load):
+              </label>
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setSelectedLanguage('all')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                    selectedLanguage === 'all'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  All (16)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedLanguage('en')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                    selectedLanguage === 'en'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  EN (8)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedLanguage('es')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                    selectedLanguage === 'es'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  ES (8)
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+              {filteredDecks.map((deck) => (
                 <button
                   key={deck.id}
                   onClick={() => {
@@ -118,6 +160,9 @@ export const CustomFileModal: React.FC<CustomFileModalProps> = ({
                 >
                   <div className="flex items-center justify-between text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
                     <span>{deck.course} • {deck.day}</span>
+                    <span className="text-[9px] uppercase px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold">
+                      {deck.language.toUpperCase()}
+                    </span>
                   </div>
                   <div className="text-xs font-medium text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-indigo-300">
                     {deck.title}

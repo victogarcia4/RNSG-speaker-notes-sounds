@@ -6,7 +6,8 @@ export function parseNarrationScript(rawScript: string): SlideItem[] {
   let currentSlide: Partial<SlideItem> | null = null;
   let currentNarrationLines: string[] = [];
 
-  const slideHeaderRegex = /^Slide\s+(\d+)(?:\s*[:—–-]\s*(.*))?$/i;
+  // Support "Slide 1 — Title", "Diapositiva 1 — Title", and markdown headers like "# Diapositiva 1 — Title"
+  const slideHeaderRegex = /^(?:#+\s*)?(?:Slide|Diapositiva)\s+(\d+)(?:\s*[:—–-]\s*(.*))?$/i;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -61,20 +62,20 @@ export function parseNarrationScript(rawScript: string): SlideItem[] {
 
 export function categorizeSlide(slideNum: number, title: string): string {
   const lower = title.toLowerCase();
-  if (lower.includes('self-check') || lower.includes('exit ticket') || lower.includes('review') || lower.includes('active recall')) return 'Review & Self-Check';
-  if (lower.includes('case') || lower.includes('ngn') || lower.includes('sarah') || lower.includes('maria') || lower.includes('linda') || lower.includes('denise') || lower.includes('grace') || lower.includes('amelia') || lower.includes('leah') || lower.includes('bianca') || lower.includes('jordan') || lower.includes('monica') || lower.includes('sally') || lower.includes('tanya') || lower.includes('clara') || lower.includes('devon') || lower.includes('alicia') || lower.includes('brenda') || lower.includes('priya') || lower.includes('aisha')) return 'Case Study / NGN';
-  if (lower.includes('closing') || lower.includes('takeaway') || lower.includes('synthesis') || lower.includes('summary')) return 'Synthesis & Takeaways';
-  if (lower.includes('bleeding') || lower.includes('abortion') || lower.includes('hemorrhage') || lower.includes('previa') || lower.includes('abruption') || lower.includes('dic')) return 'Obstetric Hemorrhage & Bleeding';
-  if (lower.includes('hypertens') || lower.includes('preeclampsia') || lower.includes('hellp') || lower.includes('magnesium') || lower.includes('eclampsia')) return 'Hypertensive Disorders';
-  if (lower.includes('diabetes') || lower.includes('gdm') || lower.includes('glucose') || lower.includes('insulin')) return 'Gestational Diabetes';
-  if (lower.includes('preterm') || lower.includes('prom') || lower.includes('pprom') || lower.includes('cerclage') || lower.includes('cervical')) return 'Preterm Labor & Membranes';
-  if (lower.includes('dystocia') || lower.includes('labor') || lower.includes('induction') || lower.includes('oxytocin') || lower.includes('shoulder') || lower.includes('rupture') || lower.includes('cord prolapse')) return 'Intrapartum & Dystocia';
-  if (lower.includes('newborn') || lower.includes('resuscitation') || lower.includes('jaundice') || lower.includes('bilirubin') || lower.includes('sepsis') || lower.includes('trauma') || lower.includes('brachial') || lower.includes('loss')) return 'Newborn & Resuscitation';
-  if (lower.includes('dysmenorrhea') || lower.includes('prostaglandin') || lower.includes('pain')) return 'Menstrual & Dysmenorrhea';
-  if (lower.includes('menopause') || lower.includes('estrogen') || lower.includes('cardiovascular')) return 'Menopause Transition';
-  if (lower.includes('contracep') || lower.includes('iud') || lower.includes('pill') || lower.includes('larc') || lower.includes('aches') || lower.includes('patch')) return 'Contraceptive Counseling';
-  if (lower.includes('preconception') || lower.includes('genetics') || lower.includes('inheritance') || lower.includes('valproate')) return 'Preconception & Genetics';
-  if (lower.includes('nutrition') || lower.includes('discomfort') || lower.includes('vomiting') || lower.includes('hyperemesis')) return 'Maternal Nutrition & Wellness';
-  if (lower.includes('surveillance') || lower.includes('screening') || lower.includes('ultrasound') || lower.includes('amniocentesis') || lower.includes('nonstress') || lower.includes('biophysical')) return 'Antepartum Surveillance';
+  if (lower.includes('self-check') || lower.includes('autoverificación') || lower.includes('pregunta') || lower.includes('exit ticket') || lower.includes('review') || lower.includes('active recall')) return 'Review & Self-Check';
+  if (lower.includes('case') || lower.includes('caso') || lower.includes('ngn') || lower.includes('escenario') || lower.includes('sarah') || lower.includes('maria') || lower.includes('linda') || lower.includes('denise') || lower.includes('grace') || lower.includes('amelia') || lower.includes('leah') || lower.includes('bianca') || lower.includes('jordan') || lower.includes('monica') || lower.includes('sally') || lower.includes('tanya') || lower.includes('clara') || lower.includes('devon') || lower.includes('alicia') || lower.includes('brenda') || lower.includes('priya') || lower.includes('aisha')) return 'Case Study / NGN';
+  if (lower.includes('closing') || lower.includes('cierre') || lower.includes('takeaway') || lower.includes('conclusiones') || lower.includes('synthesis') || lower.includes('síntesis') || lower.includes('summary') || lower.includes('resumen')) return 'Synthesis & Takeaways';
+  if (lower.includes('bleeding') || lower.includes('hemorragia') || lower.includes('sangrado') || lower.includes('abortion') || lower.includes('aborto') || lower.includes('previa') || lower.includes('abruption') || lower.includes('desprendimiento') || lower.includes('dic') || lower.includes('cid')) return 'Obstetric Hemorrhage & Bleeding';
+  if (lower.includes('hypertens') || lower.includes('hipertens') || lower.includes('preeclampsia') || lower.includes('hellp') || lower.includes('magnesium') || lower.includes('magnesio') || lower.includes('eclampsia')) return 'Hypertensive Disorders';
+  if (lower.includes('diabetes') || lower.includes('gdm') || lower.includes('glucose') || lower.includes('glucosa') || lower.includes('insulin') || lower.includes('insulina')) return 'Gestational Diabetes';
+  if (lower.includes('preterm') || lower.includes('pretérmino') || lower.includes('prematur') || lower.includes('prom') || lower.includes('rpm') || lower.includes('cerclage') || lower.includes('cerclaje') || lower.includes('cervical')) return 'Preterm Labor & Membranes';
+  if (lower.includes('dystocia') || lower.includes('distocia') || lower.includes('labor') || lower.includes('parto') || lower.includes('induction') || lower.includes('inducción') || lower.includes('oxytocin') || lower.includes('oxitocina') || lower.includes('shoulder') || lower.includes('hombros') || lower.includes('cordón') || lower.includes('cord')) return 'Intrapartum & Dystocia';
+  if (lower.includes('newborn') || lower.includes('neonato') || lower.includes('recién nacido') || lower.includes('resuscitation') || lower.includes('reanimación') || lower.includes('prn') || lower.includes('nrp') || lower.includes('jaundice') || lower.includes('ictericia') || lower.includes('bilirubin') || lower.includes('sepsis') || lower.includes('pérdida')) return 'Newborn & Resuscitation';
+  if (lower.includes('dysmenorrhea') || lower.includes('dismenorrea') || lower.includes('prostaglandin') || lower.includes('dolor')) return 'Menstrual & Dysmenorrhea';
+  if (lower.includes('menopause') || lower.includes('menopausia') || lower.includes('estrogen') || lower.includes('estrógeno')) return 'Menopause Transition';
+  if (lower.includes('contracep') || lower.includes('anticoncep') || lower.includes('iud') || lower.includes('diu') || lower.includes('larc') || lower.includes('parche')) return 'Contraceptive Counseling';
+  if (lower.includes('preconception') || lower.includes('preconcepcional') || lower.includes('genetics') || lower.includes('genética') || lower.includes('herencia')) return 'Preconception & Genetics';
+  if (lower.includes('nutrition') || lower.includes('nutrición') || lower.includes('discomfort') || lower.includes('molestias') || lower.includes('hiperémesis') || lower.includes('hyperemesis')) return 'Maternal Nutrition & Wellness';
+  if (lower.includes('surveillance') || lower.includes('vigilancia') || lower.includes('screening') || lower.includes('tamizaje') || lower.includes('ultrasound') || lower.includes('ecografía') || lower.includes('amniocentesis') || lower.includes('nst')) return 'Antepartum Surveillance';
   return 'Physiology & Clinical Care';
 }

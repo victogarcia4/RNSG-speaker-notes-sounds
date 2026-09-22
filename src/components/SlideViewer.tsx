@@ -16,6 +16,8 @@ import { SlideItem } from '../types';
 
 interface SlideViewerProps {
   slide: SlideItem;
+  totalSlides?: number;
+  language?: 'en' | 'es';
   isPlaying: boolean;
   isPaused: boolean;
   spokenCharIndex: number;
@@ -27,6 +29,8 @@ interface SlideViewerProps {
 
 export const SlideViewer: React.FC<SlideViewerProps> = ({
   slide,
+  totalSlides,
+  language = 'en',
   isPlaying,
   isPaused,
   spokenCharIndex,
@@ -87,7 +91,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <span className="inline-flex items-center justify-center px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold text-sm border border-indigo-100 dark:border-indigo-800/60">
-              Slide {slide.slideNumber} of 70
+              {language === 'es' ? `Diapositiva ${slide.slideNumber} de ${totalSlides || '—'}` : `Slide ${slide.slideNumber} of ${totalSlides || '—'}`}
             </span>
 
             {slide.category && (

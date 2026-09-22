@@ -6,7 +6,7 @@ import { SlideListDrawer } from './components/SlideListDrawer';
 import { GoogleAppsScriptModal } from './components/GoogleAppsScriptModal';
 import { PythonScriptModal } from './components/PythonScriptModal';
 import { CustomFileModal } from './components/CustomFileModal';
-import { getLectureById, LECTURE_DECKS_METADATA } from './data/lectures';
+import { getLectureById, getCorrespondingDeckId, LECTURE_DECKS_METADATA } from './data/lectures';
 import { LectureData, SlideItem } from './types';
 import { useSlideSpeech } from './hooks/useSlideSpeech';
 
@@ -19,6 +19,7 @@ export default function App() {
   const [isPythonModalOpen, setIsPythonModalOpen] = useState<boolean>(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
 
+  const currentLanguage: 'en' | 'es' = lecture.language || 'en';
   const activeSlide = lecture.slides[activeSlideIndex] || lecture.slides[0];
 
   // Auto-advance callback
@@ -50,6 +51,7 @@ export default function App() {
     setAutoAdvance,
   } = useSlideSpeech({
     onSlideComplete: handleSlideComplete,
+    preferredLanguage: currentLanguage,
   });
 
   // Switch between pre-loaded lecture decks
@@ -60,6 +62,18 @@ export default function App() {
     setLecture(newLecture);
     setActiveSlideIndex(0);
   }, [stop]);
+
+  // Toggle between English and Spanish counterparts of the same deck
+  const handleToggleLanguage = useCallback((targetLang: 'en' | 'es') => {
+    if (targetLang === currentLanguage) return;
+    stop();
+    const nextDeckId = getCorrespondingDeckId(activeDeckId, targetLang);
+    setActiveDeckId(nextDeckId);
+    const newLecture = getLectureById(nextDeckId);
+    setLecture(newLecture);
+    // Keep user on the same slide number if valid
+    setActiveSlideIndex((prev) => Math.min(prev, newLecture.slides.length - 1));
+  }, [currentLanguage, activeDeckId, stop]);
 
   const handlePlayActiveSlide = useCallback(() => {
     if (activeSlide) {
@@ -130,6 +144,7 @@ export default function App() {
       totalWords,
       estimatedMinutes: Math.round(totalSeconds / 60),
       slides,
+      language: 'en',
     });
     setActiveSlideIndex(0);
   }, [stop]);
@@ -150,20 +165,21 @@ export default function App() {
     downloadAnchor.remove();
   }, [lecture]);
 
-  // Export all 8 decks combined
+  // Export all 16 decks (8 EN + 8 ES) combined
   const handleExportAllJson = useCallback(() => {
     const allDecks = LECTURE_DECKS_METADATA.map(meta => getLectureById(meta.id));
     const combinedData = {
       project: "Google Slides Voice & Speaker Notes Studio",
       author: "Dr. Victor Garcia Martinez",
       totalDecks: allDecks.length,
+      languages: ["en", "es"],
       totalSlidesAllDecks: allDecks.reduce((sum, d) => sum + d.totalSlides, 0),
       decks: allDecks,
     };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(combinedData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", "all_curriculum_speaker_notes_432_slides.json");
+    downloadAnchor.setAttribute("download", "all_curriculum_speaker_notes_bilingual_en_es.json");
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -193,6 +209,8 @@ export default function App() {
         activeDeckId={activeDeckId}
         onSelectDeck={handleSelectDeck}
         activeSlideNumber={activeSlide?.slideNumber || 1}
+        currentLanguage={currentLanguage}
+        onToggleLanguage={handleToggleLanguage}
         onOpenAppsScript={() => setIsAppsScriptModalOpen(true)}
         onOpenPythonScript={() => setIsPythonModalOpen(true)}
         onOpenUploadModal={() => setIsUploadModalOpen(true)}
@@ -217,6 +235,8 @@ export default function App() {
         {/* Slide Viewer */}
         <SlideViewer
           slide={activeSlide}
+          totalSlides={lecture.totalSlides}
+          language={currentLanguage}
           isPlaying={isPlaying}
           isPaused={isPaused}
           spokenCharIndex={spokenCharIndex}

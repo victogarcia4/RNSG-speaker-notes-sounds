@@ -17,6 +17,7 @@ export interface LectureData {
   totalWords: number;
   estimatedMinutes: number;
   slides: SlideItem[];
+  language?: 'en' | 'es';
 }
 
 export interface VoiceSettings {
